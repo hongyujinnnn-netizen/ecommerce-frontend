@@ -36,17 +36,50 @@
 // }
 // export default Login
 
-import React from "react";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../redux/authSlice";
 
-const Login = ({ openSignUp }) => {
+const Login = ({ openSignUp, closeModal }) => {
+    const dispatch = useDispatch();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:8080/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                dispatch(loginSuccess({ id: data.userId, name: data.name }));
+                alert("Login successful! Welcome " + data.name);
+                if (closeModal) closeModal();
+            } else {
+                alert(data.message || "Login failed");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("Backend is not reachable.");
+        }
+    };
+
     return (
         <div className="space-y-4">
             <h2 className="text-xl font-bold text-center">Login</h2>
 
-            <input type="email" placeholder="Email" className="w-full border p-2" />
-            <input type="password" placeholder="Password" className="w-full border p-2" />
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border p-2" />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border p-2" />
 
-            <button className="w-full bg-black text-white p-2">
+            <button onClick={handleLogin} className="w-full bg-black text-white p-2">
                 Login
             </button>
 

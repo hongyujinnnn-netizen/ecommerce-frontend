@@ -70,16 +70,38 @@ import InfoSection from "../components/InfoSection";
 import CategorySection from "../components/CategorySection";
 import { setProducts } from "../redux/productSlice";
 import { useDispatch, useSelector } from "react-redux";
-import mockData, { Categories, Products } from "../assets/mockData";
 import ProductCard from "../components/ProductCard";
+
+export const Categories = [
+    "Electronics",
+    "Fashion",
+    "Home & Kitchen",
+    "Beauty",
+    "Sports",
+    "Automotive",
+    "IPhone",
+];
 
 const Home = () => {
     const dispatch = useDispatch();
     const products = useSelector((state) => state.product);
     
     useEffect(() => {
-        dispatch(setProducts(mockData.Products));
-    }, []);
+        fetch("http://localhost:8080/api/products")
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then(data => {
+                // The backend returns a paginated response, so the products are in data.content
+                const productsArray = data.content ? data.content : data;
+                dispatch(setProducts(productsArray));
+            })
+            .catch(err => {
+                console.error("Failed to fetch products from database:", err);
+                // We no longer fallback to mockData as requested
+            });
+    }, [dispatch]);
 
     return (
         <div>
